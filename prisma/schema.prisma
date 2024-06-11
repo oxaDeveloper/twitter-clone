@@ -1,0 +1,65 @@
+// prisma/schema.prisma
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id            String    @id @default(uuid())
+    name          String?
+    email         String    @unique
+    image         String?
+    emailVerified DateTime?
+    createdAt     DateTime  @default(now())
+    tweets        Tweet[]
+    accounts      Account[]
+    sessions      Session[]
+}
+
+model Tweet {
+    id        String   @id @default(uuid())
+    content   String
+    createdAt DateTime @default(now())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+}
+
+model Account {
+    id                String  @id @default(uuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String? @default("")
+    access_token      String? @default("")
+    expires_at        Int?
+    token_type        String? @default("")
+    scope             String? @default("")
+    id_token          String? @default("")
+    session_state     String? @default("")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(uuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+
+    user User @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
